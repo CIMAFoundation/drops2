@@ -102,3 +102,16 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# vscode
+.vscode/
+
+# Pipenv
+Pipfile.lock
+
+# Mac
+.DS_Store
+
+#login settings
+.drops.rc
+
