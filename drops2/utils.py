@@ -33,13 +33,38 @@ class DropsCredentials:
     
     @staticmethod
     def dds_url():
-        DropsCredentials.load()
+        #DropsCredentials.load()
+        if DropsCredentials.instance is None:
+            raise DropsLoginException()
+
         return DropsCredentials.instance.__dds_url
     
     @staticmethod
     def auth_info():
-        DropsCredentials.load()
+        if DropsCredentials.instance is None:
+            raise DropsLoginException()
+                
         return DropsCredentials.instance.__auth_info
+    
+    @staticmethod
+    def set(dds_url, user, password):
+        DropsCredentials.instance = DropsCredentials(dds_url, (user, password))
+
+
+class DropsLoginException(Exception):
+    """
+        Login exception
+    """
+    def __init__(self, message=None):
+        if message is None:
+            self.message = '''
+            No login info files .drops.rc or ~/.drops.rc. 
+            Please use DropsCredentials.set if you want to login programmatically
+            '''
+    
+    #@property
+    def __str__(self):
+        return repr(self.message)
 
 class DropsException(Exception):
     """
