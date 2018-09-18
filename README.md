@@ -6,19 +6,32 @@ dds data access api
 ## Installation
 
 with pip:
-```
+```bash
 pip install --extra-index-url https://test.pypi.org/simple/ drops2
 ```
+Please note that you may need to install __pyproj__ manually from the project git repository.
 
-### Usage
+## Usage
 
 The library tries to load the __.drops.rc__ file in the current folder.
+
+Exampe of __.drops.rc__ file:
+```json
+{
+    "dds_url": "http://example.com/dds/rest",
+    "user": "admin",
+    "password": "password"
+}
+```
+
+
 If you want to programmatically set the credentials use:
 ```python
 import drops2
-drops2.set_credentials('http://example.com/dds', 'user', 'password')
+drops2.set_credentials('http://example.com/dds/rest', 'user', 'password')
 ```
 
+#### Example
 Simple example of accessing pluviometric sensors data.
 ```python
 from drops2 import sensors
@@ -33,6 +46,7 @@ df_pluvio = sensors.get_sensor_data(sensor_class, sensors_list,
 
 ```
 
+Check out the Binder Jupyter notebook for more examples.
 
 ## Versioning
 
