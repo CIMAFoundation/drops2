@@ -1,5 +1,6 @@
 import io
-from builtins import zip, map, filter # 2 and 3 compatibility
+from builtins import filter, map, zip  # 2 and 3 compatibility
+from typing import Dict, List, Tuple, Any
 
 import geopandas as gpd
 import numpy as np
@@ -9,7 +10,7 @@ import xarray as xr
 from requests.utils import quote
 from shapely.geometry import Point
 
-from .utils import (REQUESTS_TIMEOUT, DropsException, DropsCredentials,
+from .utils import (REQUESTS_TIMEOUT, DropsCredentials, DropsException,
                     datetimes_from_strings, format_dates)
 
 
@@ -34,12 +35,13 @@ def __raw_data_to_pandas(data):
     df.index = pd.to_datetime(df.index)
     return df
 
-class Sensor(object):
-    id = None
-    name = None
-    lat = None
-    lng = None
-    mu = None
+class Sensor():
+    sensor_type: str = None
+    id: str = None
+    name: str = None
+    lat: float = None
+    lng: float = None
+    mu: str = None
 
     def __init__(self, sensor_dict):
         self.id = sensor_dict['id']
@@ -48,17 +50,17 @@ class Sensor(object):
         self.lng = sensor_dict['lon']
         self.mu = sensor_dict['sensorMU']
 
-    def is_inside(self, geo_win):
+    def is_inside(self, geo_win) -> bool:
         inside = (geo_win[2] <= self.lat <= geo_win[3]) and (geo_win[0] <= self.lng <= geo_win[1])
         return inside
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__dict__.__repr__()
 
 
-class SensorList(object):
-    list = None
-    __df = None
+class SensorList():
+    list: List[Sensor] = None
+    __df: gpd.GeoDataFrame = None
 
     def __init__(self, sensor_list, geo_win=None):
         self.list = []
@@ -67,14 +69,14 @@ class SensorList(object):
             if geo_win is None or sensor.is_inside(geo_win):
                 self.list.append(sensor)
 
-    def __get_by_id__(self, s_id):
+    def __get_by_id__(self, s_id: str) -> Sensor:
         sensors_with_id = filter(lambda s: s.id==s_id, self.list)
         try:
             return next(sensors_with_id)
         except StopIteration as e:
             raise KeyError(s_id + ' not in sensor list')
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Any) -> Sensor:
         if isinstance(item, str):
             return self.__get_by_id__(item)
         else:
@@ -83,7 +85,7 @@ class SensorList(object):
     def __repr__(self):
         return self.list.__repr__()
 
-    def to_geopandas(self):
+    def to_geopandas(self) -> gpd.GeoDataFrame:
         if self.__df is None:
             index = [s.id for s in self.list]
             data = [(s.name, s.mu) for s in self.list]
@@ -129,7 +131,7 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None):
 
     if r.status_code is not requests.codes.ok:
         raise DropsException(
-            "Error while fetching sensor anagraphic for %s, %s" % (sensor_class, group),
+            "Error while fetching sensor anagraphic for %s on group %s" % (sensor_class, group),
             response=r
         )
 
@@ -242,16 +244,4 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
 
 
 if __name__ == '__main__':
-    import pandas as pd
-    from utils import date_format
-    from datetime import datetime
-    date_from = '201708010000'
-    date_to = '201708030000'
-
-    sensor_class = 'PLUVIOMETRO'
-    sensors_list = get_sensor_list(sensor_class, geo_win=(6.0, 36.0, 18.6, 47.5))
-
-    #for s in sensors_list.list[0::10]:
-    # get the data as a pandas dataframe
-    data = get_sensor_data(sensor_class, sensors_list, date_from, date_to, date_as_string=True)
-    print([(d['sensorId'], d['timeline'][0]) for d in data if len(d['timeline'])>0])
+    pass

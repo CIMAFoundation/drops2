@@ -62,7 +62,6 @@ class DropsLoginException(Exception):
             Please use DropsCredentials.set if you want to login programmatically
             '''
     
-    #@property
     def __str__(self):
         return repr(self.message)
 
@@ -81,11 +80,8 @@ class DropsException(Exception):
         self.response = response
 
         if response is not None:
-            self.message += \
-                '; status code: %s, reason: %s' % \
-            (response.status_code, response.reason)
+            self.message += '. Status Code: %s; Reason: %s' % (response.status_code, response.reason)
 
-    @property
     def __str__(self):
         return repr(self.message)
 
