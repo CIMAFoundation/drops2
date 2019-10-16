@@ -43,7 +43,7 @@ def get_dates(data_id, date_from, date_to, date_as_string=False):
         date_to=date_to
     )
     req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
-    print(req_url)
+    
     r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     if r.status_code is not requests.codes.ok:
@@ -178,7 +178,7 @@ def get_data(data_id, date_ref, variable, level, date_selected='all'):
         date_selected=date_selected
     )
     req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
-    print(req_url)
+    
     r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
     if r.status_code != requests.codes.ok:
         raise DropsException(
@@ -196,3 +196,35 @@ def get_data(data_id, date_ref, variable, level, date_selected='all'):
 
 
     return cf_data
+
+
+@format_dates()
+def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield):
+    query_url = '/drops_coverages/aggregation/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/?shpfile=%(shpfile)s&shpidfield=%(shpidfield)s'
+    #/drops_coverages/coverage/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/%(date_selected)s'
+    query_data = dict(
+        data_id=data_id,
+        date_ref=date_ref,
+        variable=variable,
+        level=level,
+        shpfile=shpfile,
+        shpidfield=shpidfield
+    )
+    req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
+
+    r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    if r.status_code != requests.codes.ok:
+        raise DropsException(
+            "Error while fetching aggregation for %s - %s, variable: %s, level: %s, shpfile: %s, shpid: %s" %
+            (data_id, date_ref, variable, level, shpfile, shpidfield),
+            response=r
+        )
+
+    try:
+        data = r.json()
+    except Exception as exp:
+        print('Error loading dataset from %s' % req_url)
+        raise exp
+
+    return data
+
