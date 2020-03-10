@@ -1,12 +1,9 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
 numpy = "*"
 requests = "*"
 scipy = "*"
@@ -18,14 +15,10 @@ Shapely = "*"
 click = "*"
 pyproj = {git = "https://github.com/jswhit/pyproj.git"}
 
-
 [requires]
-
 python_version = "3"
 
-
 [dev-packages]
-
 ipython = "*"
 notebook = "*"
 matplotlib = "*"

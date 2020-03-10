@@ -36,12 +36,12 @@ def __raw_data_to_pandas(data):
     return df
 
 class Sensor():
-    sensor_type = None
-    id = None
-    name = None
-    lat = None
-    lng = None
-    mu = None
+    sensor_type: str = None
+    id: str = None
+    name: str = None
+    lat: float = None
+    lng: float = None
+    mu: str = None
 
     def __init__(self, sensor_dict):
         self.id = sensor_dict['id']
