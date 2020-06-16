@@ -1,12 +1,15 @@
 import io
 from builtins import filter, map, zip  # 2 and 3 compatibility
-from typing import Dict, List, Tuple, Any
+from datetime import timedelta
+from typing import Any, Dict, List, Tuple
+from numbers import Number
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import requests
 import xarray as xr
+from pandas import Timedelta
 from requests.utils import quote
 from shapely.geometry import Point
 
@@ -141,17 +144,19 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None):
 
 
 @format_dates()
-def get_sensor_data(sensor_class, sensors, date_from, date_to, date_as_string=False, as_pandas=False):
+def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, date_as_string=False, as_pandas=False):
     """
     get data from selected sensors on the selected date range
     :param sensor_class: sensor class string
     :param sensors: SensorList Object, or list of Sensors or list of sensors id
     :param date_from: date from
     :param date_to: date to
+    :param aggr: aggregation time as number of seconds or datetime.timedelta object or pd.timedelta object
     :param date_as_string: return dates as string or datetime objects (default)
+    :param as_pandas: return data converted as pandas dataframe (default)
     :return:
     """
-    query_url = '/drops_sensors/serie'
+    query_url = '/drops_sensors/serieaggr' if aggr_time else '/drops_sensors/serie'
     
     if type(sensors) is SensorList:
         sensors = sensors.list
@@ -169,6 +174,17 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, date_as_string=Fa
         'to': date_to,
         'ids': id_sensors
     }
+
+    if aggr_time:
+        if type(aggr_time) in (timedelta, Timedelta):
+            aggr_seconds = aggr_time.total_seconds()
+        elif isinstance(aggr_time, Number):
+            aggr_seconds = aggr_time
+        else:
+            raise DropsException(f'aggr_time object is neither numeric or timedelta object [{aggr_time}]')
+
+        post_data['step'] = aggr_seconds
+
     req_url = DropsCredentials.dds_url() + quote(query_url)
     r = requests.post(req_url, json=post_data, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
 
