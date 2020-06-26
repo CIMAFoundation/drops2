@@ -14,9 +14,9 @@ def get_supported_data():
     :return: list of supported data types
     """
     req_url = DropsCredentials.dds_url() + '/drops_coverages/supported'
-    r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    response = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
 
-    if r.status_code != 200:
+    if response.status_code != 200:
         raise DropsException(
             'Error while fetching supported data',
             response=response
