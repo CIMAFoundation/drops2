@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="drops2",
-    version="0.4.0",
+    version="0.5.0",
     author="Mirko D'Andrea",
     author_email="mirko.dandrea@cimafoundation.org",
     description="dds data access api",
