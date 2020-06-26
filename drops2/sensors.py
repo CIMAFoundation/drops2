@@ -211,20 +211,19 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
         return data
 
 
-@format_dates(parameters=['dates_selected'])
-def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
-                   cum_hours=3, geo_win=(6.0, 36.0, 18.6, 47.5),
-                   img_dim=(630, 575), radius=0.5):
+def __get_sensor_map_request(sensor_class, dates_selected, group,
+                   cum_hours, geo_win,
+                   img_dim, radius):
     """
     get a map for the selected sensor on the selected geowindow
     :param sensor_class: sensor class string
     :param dates_selected: array of selected dates
-    :param group: group of sensors (default 'Dewetra%Default')
-    :param cum_hours: cumulation hours (default 3)
+    :param group: group of sensors
+    :param cum_hours: cumulation hours
     :param geo_win: geographical window (lon_min, lon_max, lat_min, lat_max)
     :param img_dim: dimension of the output image (nrows, ncols)
     :param radius: radius for the inrepolation function
-    :return: xarray dataset
+    :return: request response and url
     """
     query_url = '/drops_sensors/map/'
     post_data = {
@@ -240,16 +239,38 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
 
     req_url = DropsCredentials.dds_url() + quote(query_url)
 
-    r = requests.post(req_url, json=post_data, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
-    if r.status_code is not requests.codes.ok:
+    response = requests.post(req_url, json=post_data, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+
+    return response, req_url
+
+@format_dates(parameters=['dates_selected'])
+def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
+                   cum_hours=3, geo_win=(6.0, 36.0, 18.6, 47.5),
+                   img_dim=(630, 575), radius=0.5):
+    """
+    get a map for the selected sensor on the selected geowindow
+    :param sensor_class: sensor class string
+    :param dates_selected: array of selected dates
+    :param group: group of sensors (default 'Dewetra%Default')
+    :param cum_hours: cumulation hours (default 3)
+    :param geo_win: geographical window (lon_min, lon_max, lat_min, lat_max)
+    :param img_dim: dimension of the output image (nrows, ncols)
+    :param radius: radius for the inrepolation function
+    :return: xarray dataset
+    """
+    response, req_url = __get_sensor_map_request(sensor_class, dates_selected, group,
+                   cum_hours, geo_win,
+                   img_dim, radius)
+
+    if response.status_code is not requests.codes.ok:
         raise DropsException(
             "Error while fetching data for %s" %
             (sensor_class,),
-            response=r
+            response=response
         )
 
     try:
-        raw_data = io.BytesIO(r.content)
+        raw_data = io.BytesIO(response.content)
         cf_data = xr.open_dataset(raw_data)
     except Exception as exp:
         print('Error loading dataset from %s' % req_url)
