@@ -158,7 +158,7 @@ def get_timeline(data_id, date_ref, variable, level, date_as_string=False):
     return dates
 
 
-def __get_data_request(data_id, date_ref, variable, level, date_selected='all'):
+def get_data_request(data_id, date_ref, variable, level, date_selected='all', stream=False):
     """
     get the data for the selected coverage, variable, level on the selected date and reference date
     :param data_id: coverage id
@@ -177,7 +177,7 @@ def __get_data_request(data_id, date_ref, variable, level, date_selected='all'):
         date_selected=date_selected
     )
     req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
-    response = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    response = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT, stream=stream)
 
     return response, req_url
 
@@ -193,7 +193,7 @@ def get_data(data_id, date_ref, variable, level, date_selected='all'):
     :return: a xarray dataset
     """
 
-    response, req_url = __get_data_request(data_id, date_ref, variable, level, date_selected)
+    response, req_url = get_data_request(data_id, date_ref, variable, level, date_selected)
     if response.status_code != requests.codes.ok:
         raise DropsException(
             "Error while fetching data for %s - %s, variable: %s, level: %s, selected date: %s" %

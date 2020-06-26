@@ -211,9 +211,9 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
         return data
 
 
-def __get_sensor_map_request(sensor_class, dates_selected, group,
+def get_sensor_map_request(sensor_class, dates_selected, group,
                    cum_hours, geo_win,
-                   img_dim, radius):
+                   img_dim, radius, stream=False):
     """
     get a map for the selected sensor on the selected geowindow
     :param sensor_class: sensor class string
@@ -239,7 +239,7 @@ def __get_sensor_map_request(sensor_class, dates_selected, group,
 
     req_url = DropsCredentials.dds_url() + quote(query_url)
 
-    response = requests.post(req_url, json=post_data, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    response = requests.post(req_url, json=post_data, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT, stream=stream)
 
     return response, req_url
 
@@ -258,7 +258,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
     :param radius: radius for the inrepolation function
     :return: xarray dataset
     """
-    response, req_url = __get_sensor_map_request(sensor_class, dates_selected, group,
+    response, req_url = get_sensor_map_request(sensor_class, dates_selected, group,
                    cum_hours, geo_win,
                    img_dim, radius)
 
