@@ -213,6 +213,7 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
 
 def get_sensor_map_request(sensor_class, dates_selected, group,
                    cum_hours, geo_win,
+                   interpolator,
                    img_dim, radius, stream=False):
     """
     get a map for the selected sensor on the selected geowindow
