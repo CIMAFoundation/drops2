@@ -223,6 +223,7 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
     :param geo_win: geographical window (lon_min, lon_max, lat_min, lat_max)
     :param img_dim: dimension of the output image (nrows, ncols)
     :param radius: radius for the inrepolation function
+    :param interpolator: one of 'LinearRegression', 'GRISO'
     :return: request response and url
     """
     query_url = '/drops_sensors/map/'
@@ -231,7 +232,8 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
             "imgGeoRes": ";".join([str(f) for f in geo_win + img_dim]),
             "radius": str(radius),
             "sensorClass": sensor_class,
-            "raggr": group
+            "raggr": group,
+            "interpolator": interpolator
         },
         "timeline": dates_selected,
         "cumh": cum_hours
@@ -246,6 +248,7 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
 @format_dates(parameters=['dates_selected'])
 def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
                    cum_hours=3, geo_win=(6.0, 36.0, 18.6, 47.5),
+                   interpolator='LinearRegression',
                    img_dim=(630, 575), radius=0.5):
     """
     get a map for the selected sensor on the selected geowindow
@@ -256,6 +259,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
     :param geo_win: geographical window (lon_min, lon_max, lat_min, lat_max)
     :param img_dim: dimension of the output image (nrows, ncols)
     :param radius: radius for the inrepolation function
+    :param interpolator: one of 'LinearRegression', 'GRISO'
     :return: xarray dataset
     """
     response, req_url = get_sensor_map_request(sensor_class, dates_selected, group,
