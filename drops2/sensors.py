@@ -264,7 +264,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
     :return: xarray dataset
     """
     response, req_url = get_sensor_map_request(sensor_class, dates_selected, group,
-                   cum_hours, geo_win,
+                   cum_hours, geo_win, interpolator,
                    img_dim, radius)
 
     if response.status_code is not requests.codes.ok:
