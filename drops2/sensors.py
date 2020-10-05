@@ -54,7 +54,7 @@ class Sensor():
         self.mu = sensor_dict['sensorMU']
 
     def is_inside(self, geo_win) -> bool:
-        inside = (geo_win[2] <= self.lat <= geo_win[3]) and (geo_win[0] <= self.lng <= geo_win[1])
+        inside = (geo_win[1] <= self.lat <= geo_win[3]) and (geo_win[0] <= self.lng <= geo_win[2])
         return inside
 
     def __repr__(self) -> str:
