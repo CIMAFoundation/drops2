@@ -39,15 +39,17 @@ def __raw_data_to_pandas(data):
     return df
 
 class Sensor():
-    sensor_type: str = None
-    id: str = None
-    name: str = None
-    lat: float = None
-    lng: float = None
-    mu: str = None
+    sensor_type: str
+    station: int
+    id: str
+    name: str
+    lat: float
+    lng: float
+    mu: str
 
     def __init__(self, sensor_dict):
         self.id = sensor_dict['id']
+        self.station = sensor_dict['station ']
         self.name = sensor_dict['stationName']
         self.lat = sensor_dict['lat']
         self.lng = sensor_dict['lon']
@@ -91,9 +93,9 @@ class SensorList():
     def to_geopandas(self) -> gpd.GeoDataFrame:
         if self.__df is None:
             index = [s.id for s in self.list]
-            data = [(s.name, s.mu) for s in self.list]
+            data = [(s.station, s.name, s.mu) for s in self.list]
             geometry = [Point((s.lng, s.lat)) for s in self.list]
-            self.__df = gpd.GeoDataFrame(data, index=index, columns=['name', 'mu'], geometry=geometry)
+            self.__df = gpd.GeoDataFrame(data, index=index, columns=['station', 'name', 'mu'], geometry=geometry)
             self.__df.index.name = 'id'
 
         return self.__df.copy()
