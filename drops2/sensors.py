@@ -81,6 +81,14 @@ class SensorList():
         except StopIteration as e:
             raise KeyError(s_id + ' not in sensor list')
 
+    def get_by_station(self, station: int) -> Sensor:
+        sensors_with_id = filter(lambda s: s.station==station, self.list)
+        try:
+            return next(sensors_with_id)
+        except StopIteration as e:
+            raise KeyError(station + ' not in sensor list')
+
+
     def __getitem__(self, item: Any) -> Sensor:
         if isinstance(item, str):
             return self.__get_by_id__(item)
