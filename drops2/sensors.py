@@ -49,7 +49,7 @@ class Sensor():
 
     def __init__(self, sensor_dict):
         self.id = sensor_dict['id']
-        self.station = sensor_dict['station ']
+        self.station = sensor_dict['station']
         self.name = sensor_dict['stationName']
         self.lat = sensor_dict['lat']
         self.lng = sensor_dict['lon']
