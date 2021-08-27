@@ -13,7 +13,7 @@ def get_supported_data():
     gets a list of supported data types
     :return: list of supported data types
     """
-    req_url = DropsCredentials.dds_url() + '/drops_coverages/supported'
+    req_url = DropsCredentials.dds_url() + '/drops_coverages/supported/'
     response = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     if response.status_code != 200:
@@ -36,7 +36,7 @@ def get_dates(data_id, date_from, date_to, date_as_string=False):
     :param date_as_string: format the return values as strings instead of date objects
     :return: list of datetime objects or date strings
     """
-    query_url = '/drops_coverages/dates/%(data_id)s/%(date_from)s/%(date_to)s'
+    query_url = '/drops_coverages/dates/%(data_id)s/%(date_from)s/%(date_to)s/'
     query_data = dict(
         data_id=data_id,
         date_from=date_from,
@@ -70,7 +70,7 @@ def get_variables(data_id, date_ref):
     :param date_ref: selected date
     :return: list of variables
     """
-    query_url = '/drops_coverages/variables/%(data_id)s/%(date_ref)s'
+    query_url = '/drops_coverages/variables/%(data_id)s/%(date_ref)s/'
     query_data = dict(
         data_id=data_id,
         date_ref=date_ref
@@ -100,7 +100,7 @@ def get_levels(data_id, date_ref, variable):
     :param variable: selected variable
     :return: list of levels
     """
-    query_url = '/drops_coverages/levels/%(data_id)s/%(date_ref)s/%(variable)s'
+    query_url = '/drops_coverages/levels/%(data_id)s/%(date_ref)s/%(variable)s/'
     query_data = dict(
         data_id=data_id,
         date_ref=date_ref,
@@ -168,7 +168,7 @@ def get_data_request(data_id, date_ref, variable, level, date_selected='all', st
     :param date_selected: selected date
     :return: request object and request url
     """
-    query_url = '/drops_coverages/coverage/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/%(date_selected)s'
+    query_url = '/drops_coverages/coverage/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/%(date_selected)s/'
     query_data = dict(
         data_id=data_id,
         date_ref=date_ref,
@@ -213,19 +213,25 @@ def get_data(data_id, date_ref, variable, level, date_selected='all'):
 
 @format_dates()
 def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield):
-    query_url = '/drops_coverages/aggregation/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/?shpfile=%(shpfile)s&shpidfield=%(shpidfield)s'
-    #/drops_coverages/coverage/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/%(date_selected)s'
+    query_url = '/drops_coverages/aggregation/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/'
+   
     query_data = dict(
         data_id=data_id,
         date_ref=date_ref,
         variable=variable,
-        level=level,
-        shpfile=shpfile,
-        shpidfield=shpidfield
+        level=level
     )
     req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
 
-    r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    r = requests.get(
+        req_url, 
+        params=dict(
+            shpfile=shpfile,
+            shpidfield=shpidfield
+        ), 
+        auth=DropsCredentials.auth_info(), 
+        timeout=REQUESTS_TIMEOUT
+    )
     if r.status_code != requests.codes.ok:
         raise DropsException(
             "Error while fetching aggregation for %s - %s, variable: %s, level: %s, shpfile: %s, shpid: %s" %
