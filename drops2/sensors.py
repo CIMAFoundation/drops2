@@ -23,19 +23,15 @@ def __raw_data_to_pandas(data):
     :param data: list of stations data
     :return: pandas dataframe
     """
-    df = pd.DataFrame()
+    series = {}
     for d in data:
-        column = pd.Series(d['values'], index=d['timeline'])
-        #column = column.drop_duplicates(keep='last')
-        column.index = pd.to_datetime(column.index)
-        df[d['sensorId']] = column
-        # try:
-        #     df[d['sensorId']] = column
-        # except ValueError as ve:
-        #     df = df[df.index.drop_duplicates()]
-        #     df[d['sensorId']] = column
+        values = d['values']
+        timeline = d['timeline']
+        index = pd.to_datetime(timeline, utc=True)
+        column = pd.Series(values, index=index)
+        series[d['sensorId']] = column
 
-    df.index = pd.to_datetime(df.index)
+    df = pd.DataFrame(series)
     return df
 
 class Sensor():
