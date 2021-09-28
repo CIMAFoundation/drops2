@@ -131,7 +131,7 @@ def get_timeline(data_id, date_ref, variable, level, date_as_string=False):
     :param date_as_string: format the return values as strings instead of date objects
     :return: list of date objects or formatted date strings
     """
-    query_url = '/drops_coverages/timeline/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s'
+    query_url = '/drops_coverages/timeline/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/'
     query_data = dict(
         data_id=data_id,
         date_ref=date_ref,
