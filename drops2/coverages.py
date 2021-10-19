@@ -1,11 +1,15 @@
-import requests
-from requests.utils import quote
-from datetime import datetime
-import xarray as xr
 import io
+import pytz
+from datetime import datetime
 
-from .utils import DropsException, REQUESTS_TIMEOUT, format_dates, date_format, datetimes_from_strings
-from .utils import DropsCredentials
+import numpy as np
+import pandas as pd
+import requests
+import xarray as xr
+from requests.utils import quote
+
+from .utils import (REQUESTS_TIMEOUT, DropsCredentials, DropsException,
+                    date_format, datetimes_from_strings, format_dates)
 
 
 def get_supported_data():
@@ -177,6 +181,7 @@ def get_data_request(data_id, date_ref, variable, level, date_selected='all', st
         date_selected=date_selected
     )
     req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
+    print(req_url)
     response = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT, stream=stream)
 
     return response, req_url
@@ -212,7 +217,7 @@ def get_data(data_id, date_ref, variable, level, date_selected='all'):
 
 
 @format_dates()
-def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield):
+def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield, as_pandas=True):
     query_url = '/drops_coverages/aggregation/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/'
    
     query_data = dict(
@@ -245,5 +250,23 @@ def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield):
         print('Error loading dataset from %s' % req_url)
         raise exp
 
-    return data
+    if not as_pandas:
+        return data
+    
+    dates_from, dates_to = data[0]['from'], data[0]['to']
+    
+    # index = [
+    #     (datetime.fromtimestamp(d0/1000, tz=pytz.utc), datetime.fromtimestamp(d1/1000, tz=pytz.utc)) 
+    #     for (d0,d1) in zip(dates_from, dates_to)
+    # ]
 
+    index = [
+        datetime.fromtimestamp(d/1000, tz=pytz.utc) 
+        for d in dates_to
+    ]
+
+    columns = [d['fid'] for d in data]
+    values = np.array([d['values'] for d in data]).T
+    df = pd.DataFrame(values, index=index, columns=columns)
+    
+    return df
