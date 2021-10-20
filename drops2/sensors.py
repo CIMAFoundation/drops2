@@ -127,7 +127,7 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None):
     gets the list of available sensors for the selected class and group
     :param sensor_class: selected sensor class
     :param group: selected group
-    :param geo_win: optional geographical window for the selected sensors (lonmin, lonmax, latmin, latmax)
+    :param geo_win: optional geographical window for the selected sensors (lon_min, lat_min, lon_max, lat_max)
     :return: list of sensors objects
     """
     query_url = '/drops_sensors/anag/%(sensor_class)s/%(group)s'
@@ -227,7 +227,7 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
     :param dates_selected: array of selected dates
     :param group: group of sensors
     :param cum_hours: cumulation hours
-    :param geo_win: geographical window (lon_min, lon_max, lat_min, lat_max)
+    :param geo_win: geographical window (lon_min, lat_min, lon_max, lat_max)
     :param img_dim: dimension of the output image (nrows, ncols)
     :param radius: radius for the inrepolation function
     :param interpolator: one of 'LinearRegression', 'GRISO'
@@ -263,7 +263,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
     :param dates_selected: array of selected dates
     :param group: group of sensors (default 'Dewetra%Default')
     :param cum_hours: cumulation hours (default 3)
-    :param geo_win: geographical window (lon_min, lon_max, lat_min, lat_max)
+    :param geo_win: geographical window (lon_min, lat_min, lon_max, lat_max)
     :param img_dim: dimension of the output image (nrows, ncols)
     :param radius: radius for the inrepolation function
     :param interpolator: one of 'LinearRegression', 'GRISO'
