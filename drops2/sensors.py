@@ -255,20 +255,30 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
 @format_dates(parameters=['dates_selected'])
 def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
                    cum_hours=3, geo_win=(6.0, 36.0, 18.6, 47.5),
-                   interpolator='LinearRegression',
+                   interpolator=None,
                    img_dim=(630, 575), radius=0.5):
     """
-    get a map for the selected sensor on the selected geowindow
+    get a map for the selected sensor class on the selected geowindow
     :param sensor_class: sensor class string
     :param dates_selected: array of selected dates
     :param group: group of sensors (default 'Dewetra%Default')
     :param cum_hours: cumulation hours (default 3)
     :param geo_win: geographical window (lon_min, lat_min, lon_max, lat_max)
     :param img_dim: dimension of the output image (nrows, ncols)
-    :param radius: radius for the inrepolation function
-    :param interpolator: one of 'LinearRegression', 'GRISO'
+    :param radius: radius for the interpolation function: 
+            if interpolator=='GRISO' => 
+                radius > 0 will use Inverse Square Distance Weighting
+                radius < 0 will use GRISO
+
+    :param interpolator: one of 'LinearRegression', 'GRISO'. It defaults to 
+                            'GRISO' for pluviometers, otherwise to 'LinearRegression'
     :return: xarray dataset
     """
+
+    if interpolator is None:
+        interpolator = 'GRISO' if sensor_class == 'PLUVIOMETRO' else 'LinearRegression'
+        
+
     response, req_url = get_sensor_map_request(sensor_class, dates_selected, group,
                    cum_hours, geo_win, interpolator,
                    img_dim, radius)
