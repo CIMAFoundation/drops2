@@ -236,7 +236,7 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
     query_url = '/drops_sensors/map/'
     post_data = {
         "mapOptions": {
-            "imgGeoRes": ";".join([str(f) for f in geo_win + img_dim]),
+            "imgGeoRes": ";".join([str(f) for f in geo_win + [img_dim[1], img_dim[0]]]),
             "radius": str(radius),
             "sensorClass": sensor_class,
             "raggr": group,
