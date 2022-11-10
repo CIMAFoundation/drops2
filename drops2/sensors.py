@@ -23,13 +23,19 @@ def __raw_data_to_pandas(data):
     :param data: list of stations data
     :return: pandas dataframe
     """
+    
     series = {}
     for d in data:
+        sensor_id = d['sensorId']
+        if sensor_id in series:
+            continue
         values = d['values']
         timeline = d['timeline']
         index = pd.to_datetime(timeline, utc=True)
         column = pd.Series(values, index=index)
-        series[d['sensorId']] = column
+        
+        column = column[~column.index.duplicated(keep='first')]
+        series[sensor_id] = column
 
     df = pd.DataFrame(series)
     return df
