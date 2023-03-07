@@ -1,8 +1,9 @@
 import io
+import logging
 from builtins import filter, map, zip  # 2 and 3 compatibility
 from datetime import timedelta
-from typing import Any, Dict, List, Tuple
 from numbers import Number
+from typing import Any, Dict, List, Tuple
 
 import geopandas as gpd
 import numpy as np
@@ -21,6 +22,7 @@ def __raw_data_to_pandas(data):
     """
     converts the json data from the server to a dataframe
     :param data: list of stations data
+    :param auth: authentication object (optional)
     :return: pandas dataframe
     """
     
@@ -113,10 +115,11 @@ class SensorList():
 def get_sensor_classes(auth=None):
     """
     gets a list of supported sensor classes
+    :param auth: authentication object (optional)
     :return: list of supported sensor classes
     """
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     req_url = auth.dds_url() + '/drops_sensors/classes'
     r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
@@ -137,10 +140,11 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None, auth=No
     :param sensor_class: selected sensor class
     :param group: selected group
     :param geo_win: optional geographical window for the selected sensors (lon_min, lat_min, lon_max, lat_max)
+    :param auth: authentication object (optional)
     :return: list of sensors objects
     """
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     query_url = '/drops_sensors/anag/%(sensor_class)s/%(group)s'
     query_data = dict(
@@ -172,10 +176,11 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
     :param aggr: aggregation time as number of seconds or datetime.timedelta object or pd.timedelta object
     :param date_as_string: return dates as string or datetime objects (default)
     :param as_pandas: return data converted as pandas dataframe (default)
+    :param auth: authentication object (optional)
     :return:
     """
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     query_url = '/drops_sensors/serieaggr' if aggr_time else '/drops_sensors/serie'
     
@@ -246,10 +251,11 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
     :param img_dim: dimension of the output image (nrows, ncols)
     :param radius: radius for the inrepolation function
     :param interpolator: one of 'LinearRegression', 'GRISO'
+    :param auth: authentication object (optional)
     :return: request response and url
     """
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     query_url = '/drops_sensors/map/'
     post_data = {
@@ -291,6 +297,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
 
     :param interpolator: one of 'LinearRegression', 'GRISO'. It defaults to 
                             'GRISO' for pluviometers, otherwise to 'LinearRegression'
+    :param auth: authentication object (optional)                            
     :return: xarray dataset
     """
 
@@ -313,7 +320,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
         raw_data = io.BytesIO(response.content)
         cf_data = xr.open_dataset(raw_data)
     except Exception as exp:
-        print('Error loading dataset from %s' % req_url)
+        logging.error('Error loading dataset from %s' % req_url)
         raise exp
 
 

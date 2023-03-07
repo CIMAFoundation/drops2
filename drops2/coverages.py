@@ -1,9 +1,10 @@
 import io
-import pytz
+import logging
 from datetime import datetime
 
 import numpy as np
 import pandas as pd
+import pytz
 import requests
 import xarray as xr
 from requests.utils import quote
@@ -15,10 +16,11 @@ from .utils import (REQUESTS_TIMEOUT, DropsCredentials, DropsException,
 def get_supported_data(auth=None):
     """
     gets a list of supported data types
+    :param auth: authentication object (optional)
     :return: list of supported data types
     """
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     req_url = auth.dds_url() + '/drops_coverages/supported/'
 
@@ -42,6 +44,7 @@ def get_dates(data_id, date_from, date_to, date_as_string=False, auth=None):
     :param date_from: date from (date object or formatted string)
     :param date_to: date to (date object or formatted string)monito
     :param date_as_string: format the return values as strings instead of date objects
+    :param auth: authentication object (optional)
     :return: list of datetime objects or date strings
     """
     query_url = '/drops_coverages/dates/%(data_id)s/%(date_from)s/%(date_to)s/'
@@ -52,7 +55,7 @@ def get_dates(data_id, date_from, date_to, date_as_string=False, auth=None):
     )
 
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     req_url = auth.dds_url() + quote(query_url % query_data)
     
@@ -80,6 +83,7 @@ def get_variables(data_id, date_ref, auth=None):
     get the available variables for the selected coverage on the reference date
     :param data_id: coverage id
     :param date_ref: selected date
+    :param auth: authentication object (optional)
     :return: list of variables
     """
     query_url = '/drops_coverages/variables/%(data_id)s/%(date_ref)s/'
@@ -89,7 +93,7 @@ def get_variables(data_id, date_ref, auth=None):
     )
 
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     req_url = auth.dds_url() + quote(query_url % query_data)
     r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
@@ -113,6 +117,7 @@ def get_levels(data_id, date_ref, variable, auth=None):
     :param data_id: coverage id
     :param date_ref: selected date
     :param variable: selected variable
+    :param auth: authentication object (optional)
     :return: list of levels
     """
     query_url = '/drops_coverages/levels/%(data_id)s/%(date_ref)s/%(variable)s/'
@@ -122,7 +127,7 @@ def get_levels(data_id, date_ref, variable, auth=None):
         variable=variable
     )
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     req_url = auth.dds_url() + quote(query_url % query_data)
     r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
@@ -147,6 +152,7 @@ def get_timeline(data_id, date_ref, variable, level, date_as_string=False, auth=
     :param variable: selected variable
     :param level: selected level
     :param date_as_string: format the return values as strings instead of date objects
+    :param auth: authentication object (optional)
     :return: list of date objects or formatted date strings
     """
     query_url = '/drops_coverages/timeline/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/'
@@ -158,7 +164,7 @@ def get_timeline(data_id, date_ref, variable, level, date_as_string=False, auth=
     )
 
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
 
     req_url = auth.dds_url() + quote(query_url % query_data)
@@ -188,10 +194,11 @@ def get_data_request(data_id, date_ref, variable, level, date_selected='all', st
     :param variable: selected variable
     :param level: selected level
     :param date_selected: selected date
+    :param auth: authentication object (optional)
     :return: request object and request url
     """
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     query_url = '/drops_coverages/coverage/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/%(date_selected)s/'
     query_data = dict(
@@ -202,7 +209,7 @@ def get_data_request(data_id, date_ref, variable, level, date_selected='all', st
         date_selected=date_selected
     )
     req_url = auth.dds_url() + quote(query_url % query_data)
-    print(req_url)
+    logging.debug('[get_date_request]', req_url)
     response = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT, stream=stream)
 
     return response, req_url
@@ -216,9 +223,10 @@ def get_data(data_id, date_ref, variable, level, date_selected='all', auth=None)
     :param variable: selected variable
     :param level: selected level
     :param date_selected: selected date
+    :param auth: authentication object (optional)
     :return: a xarray dataset
     """
-    response, req_url = get_data_request(data_id, date_ref, variable, level, date_selected, auth)
+    response, req_url = get_data_request(data_id, date_ref, variable, level, date_selected, auth=auth)
     if response.status_code != requests.codes.ok:
         raise DropsException(
             "Error while fetching data for %s - %s, variable: %s, level: %s, selected date: %s" %
@@ -230,7 +238,7 @@ def get_data(data_id, date_ref, variable, level, date_selected='all', auth=None)
         raw_data = io.BytesIO(response.content)
         cf_data = xr.open_dataset(raw_data)
     except Exception as exp:
-        print('Error loading dataset from %s' % req_url)
+        logging.error('Error loading dataset from %s' % req_url)
         raise exp
 
     return cf_data
@@ -247,11 +255,11 @@ def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield, as_
     :param shpfile: shapefile
     :param shpidfield: shapefile id field
     :param as_pandas: return a pandas dataframe
-    :param auth: authentication object
+    :param auth: authentication object (optional)
     :return: a xarray dataset
     """
     if auth is None:
-        auth = DropsCredentials.instance
+        auth = DropsCredentials.default()
 
     query_url = '/drops_coverages/aggregation/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/'
    
@@ -282,7 +290,7 @@ def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield, as_
     try:
         data = r.json()
     except Exception as exp:
-        print('Error loading dataset from %s' % req_url)
+        logging.error('Error loading dataset from %s' % req_url)
         raise exp
 
     if not as_pandas:

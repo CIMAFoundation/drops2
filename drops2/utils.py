@@ -1,5 +1,6 @@
 import inspect
 import json
+from typing import Tuple
 from builtins import filter, map, zip  # 2 and 3 compatibility
 from datetime import date, datetime
 
@@ -19,47 +20,78 @@ class DropsCredentials:
 
     # singleton usage
     DropsCredentials.set(url, user, password) # set the credentials in the instance
+    DropsCredentials.default()                # get the instance
     sensors.get_sensor_classes() # no need to pass the auth info
 
     # context manager usage
     with DropsCredentials(url, user, password) as auth: # use the instance as a context manager
         sensors.get_sensor_classes(auth=auth)           # do something
-                
+
     """
-    instance = None
+    # singleton instance
+    __instance = None
     
     def __init__(self, dds_url, auth_info):
         self.__dds_url = dds_url
         self.__auth_info = auth_info
 
+    @staticmethod
+    def __load_settings(settings_file='.drops.rc'):
+        """
+        Load the credentials from a file 
+        """
+        try:
+            dds_url, auth_info = DropsCredentials.__load_settings(settings_file)
+            DropsCredentials.__instance = DropsCredentials(dds_url, auth_info)
+        
+        except Exception as e:
+            raise(e)
 
     @staticmethod
-    def load(settings_file='.drops.rc'):
-        if DropsCredentials.instance is None:
-            try:
-                data = json.load(open(settings_file, 'r'))
-            
-                dds_url = data['dds_url']
-                auth_info = data['user'], data['password']
-
-                DropsCredentials.instance = DropsCredentials(dds_url, auth_info)
-            
-            except Exception as e:
-                raise(e)
+    def __load_settings(settings_file) -> Tuple[str, Tuple[str, str]]:
+        """
+        Load the credentials from a file
+        """
+        data = json.load(open(settings_file, 'r'))
     
+        dds_url = data['dds_url']
+        auth_info = data['user'], data['password']
+        return dds_url, auth_info
+
+    @staticmethod
+    def set(dds_url, user, password):
+        DropsCredentials.__instance = DropsCredentials(dds_url, (user, password))
+
+    @staticmethod
+    def default():
+        if DropsCredentials.__instance is None:
+            raise DropsLoginException("No login info was set.")
+        return DropsCredentials.__instance
+
     
     def dds_url(self):
+        """
+        :return: the dds url
+        """
         return self.__dds_url
     
     
     def auth_info(self):
+        """
+        :return: the authentication info
+        """
         return self.__auth_info
     
-    @staticmethod
-    def set(dds_url, user, password):
-        DropsCredentials.instance = DropsCredentials(dds_url, (user, password))
 
-    def __init__(self, dds_url, user, password):
+    def __init__(self, dds_url=None, user=None, password=None, settings_file=None):
+        if dds_url is None or user is None or password is None:
+            if settings_file is not None:
+                dds_url, auth_info = DropsCredentials.__load_settings(settings_file)
+                user, password = auth_info
+                dds_url = dds_url
+            else:
+                raise DropsLoginException('Set login info or provide a settings file.')
+
         self.__dds_url = dds_url
         self.__auth_info = user, password
 

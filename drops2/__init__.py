@@ -1,4 +1,5 @@
 from drops2.utils import DropsCredentials
+import logging
 
 def set_credentials(url, user, password):
     """sets the authentication credentials for drops2"""
@@ -7,7 +8,7 @@ def set_credentials(url, user, password):
 def init_credentials():
     """initialize the credentials for the current session"""
     DropsCredentials.load()
-    print("Credentials loaded from .drops.rc")    
+    logging.info("Credentials loaded from .drops.rc")    
 
 try:
     init_credentials()
