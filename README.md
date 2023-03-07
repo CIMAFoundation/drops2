@@ -7,8 +7,14 @@ dds data access api
 
 with pip:
 ```bash
-pip install --extra-index-url https://test.pypi.org/simple/ drops2
+python -m pip install --extra-index-url https://test.pypi.org/simple/ drops2
+# or
+python -m pip install --no-cache-dir -U git+https://github.com/CIMAFoundation/drops2.git
+# you can also specify a branch or a tag
+python -m pip install --no-cache-dir -U git+https://github.com/CIMAFoundation/drops2.git@v0.6.0
 ```
+
+
 Please note that you may need to install __pyproj__ manually from the project git repository.
 
 ## Usage
@@ -25,10 +31,18 @@ Exampe of __.drops.rc__ file:
 ```
 
 
-If you want to programmatically set the credentials use:
+If you want to programmatically set the credentials for all the calls use:
 ```python
 import drops2
 drops2.set_credentials('http://example.com/dds/rest', 'user', 'password')
+```
+
+Otherwise, you can pass the credentials to each call using the __auth__ parameter.:
+```python
+from drops2 import sensors
+    
+with DropsCredentials(url, user, password) as auth: # use the instance as a context manager
+    sensors.get_sensor_classes(auth=auth)           # do something
 ```
 
 #### Example
