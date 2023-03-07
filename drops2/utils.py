@@ -144,7 +144,11 @@ def format_dates(date_format_str=date_format, parameters=None):
     def wrapper_func(func): 
         def wrapper(*args, **kwargs):
             # names and values as a dictionary:
-            args_name = inspect.getargspec(func)[0]
+            if hasattr(inspect, 'getfullargspec'):
+                args_name = inspect.getfullargspec(func)[0]
+            else:
+                # older versions of python < 3.10
+                args_name = inspect.getargspec(func)[0]
             # skip the first argument, it is the function to decorate
             args_dict = dict(zip(args_name, args[1:]))
             args_dict.update(kwargs)
