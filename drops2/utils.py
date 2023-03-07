@@ -24,17 +24,13 @@ class DropsCredentials:
     sensors.get_sensor_classes() # no need to pass the auth info
 
     # context manager usage
-    with DropsCredentials(url, user, password) as auth: # use the instance as a context manager
+    with DropsCredentials(url, (user, password)) as auth: # use the instance as a context manager
         sensors.get_sensor_classes(auth=auth)           # do something
 
     """
     # singleton instance
     __instance = None
     
-    def __init__(self, dds_url, auth_info):
-        self.__dds_url = dds_url
-        self.__auth_info = auth_info
-
     @staticmethod
     def load(settings_file='.drops.rc'):
         """
@@ -83,17 +79,16 @@ class DropsCredentials:
         return self.__auth_info
     
 
-    def __init__(self, dds_url=None, user=None, password=None, settings_file=None):
-        if dds_url is None or user is None or password is None:
+    def __init__(self, dds_url=None, auth_info=None, *, settings_file=None):
+        if dds_url is None or auth_info is None:
             if settings_file is not None:
-                dds_url, auth_info = DropsCredentials.__load_settings(settings_file)
-                user, password = auth_info
+                dds_url, auth_info = DropsCredentials.__load_settings(settings_file)                
                 dds_url = dds_url
             else:
                 raise DropsLoginException('Set login info or provide a settings file.')
-
+            
         self.__dds_url = dds_url
-        self.__auth_info = user, password
+        self.__auth_info = auth_info
 
     def __enter__(self):
         return self
@@ -114,7 +109,7 @@ class DropsLoginException(Exception):
             '''
     
     def __str__(self):
-        return repr(self.message)
+        return repr(self)
 
 class DropsException(Exception):
     """

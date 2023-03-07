@@ -41,7 +41,7 @@ Otherwise, you can pass the credentials to each call using the __auth__ paramete
 ```python
 from drops2 import sensors
     
-with DropsCredentials(url, user, password) as auth: # use the instance as a context manager
+with DropsCredentials(url, (user, password)) as auth: # use the instance as a context manager
     sensors.get_sensor_classes(auth=auth)           # do something
 ```
 

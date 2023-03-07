@@ -8,7 +8,7 @@ def set_credentials(url, user, password):
 def init_credentials():
     """initialize the credentials for the current session"""
     DropsCredentials.load()
-    logging.info("Credentials loaded from .drops.rc")    
+    logging.info("Credentials loaded from .drops.rc")
 
 try:
     init_credentials()
