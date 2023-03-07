@@ -5,6 +5,7 @@ pandas
 pyproj
 python-dateutil
 pytz
+decorator
 pyzmq
 requests
 scipy
