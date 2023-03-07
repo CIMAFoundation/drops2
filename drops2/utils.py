@@ -36,7 +36,7 @@ class DropsCredentials:
         self.__auth_info = auth_info
 
     @staticmethod
-    def __load_settings(settings_file='.drops.rc'):
+    def load(settings_file='.drops.rc'):
         """
         Load the credentials from a file 
         """
