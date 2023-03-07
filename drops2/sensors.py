@@ -162,7 +162,7 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None, auth=No
 
 
 @format_dates()
-def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, date_as_string=False, as_pandas=False, auth):
+def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, date_as_string=False, as_pandas=False, auth=None):
     """
     get data from selected sensors on the selected date range
     :param sensor_class: sensor class string
