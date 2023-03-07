@@ -12,13 +12,17 @@ from .utils import (REQUESTS_TIMEOUT, DropsCredentials, DropsException,
                     date_format, datetimes_from_strings, format_dates)
 
 
-def get_supported_data():
+def get_supported_data(auth=None):
     """
     gets a list of supported data types
     :return: list of supported data types
     """
-    req_url = DropsCredentials.dds_url() + '/drops_coverages/supported/'
-    response = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    if auth is None:
+        auth = DropsCredentials.instance
+
+    req_url = auth.dds_url() + '/drops_coverages/supported/'
+
+    response = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     if response.status_code != 200:
         raise DropsException(
@@ -31,7 +35,7 @@ def get_supported_data():
 
 
 @format_dates()
-def get_dates(data_id, date_from, date_to, date_as_string=False):
+def get_dates(data_id, date_from, date_to, date_as_string=False, auth=None):
     """
     gets the timeline for the selected coverage during the selected time period
     :param data_id: coverage id
@@ -46,9 +50,13 @@ def get_dates(data_id, date_from, date_to, date_as_string=False):
         date_from=date_from,
         date_to=date_to
     )
-    req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
+
+    if auth is None:
+        auth = DropsCredentials.instance
+
+    req_url = auth.dds_url() + quote(query_url % query_data)
     
-    r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     if r.status_code is not requests.codes.ok:
         raise DropsException(
@@ -67,7 +75,7 @@ def get_dates(data_id, date_from, date_to, date_as_string=False):
 
 
 @format_dates()
-def get_variables(data_id, date_ref):
+def get_variables(data_id, date_ref, auth=None):
     """
     get the available variables for the selected coverage on the reference date
     :param data_id: coverage id
@@ -80,8 +88,11 @@ def get_variables(data_id, date_ref):
         date_ref=date_ref
     )
 
-    req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
-    r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    if auth is None:
+        auth = DropsCredentials.instance
+
+    req_url = auth.dds_url() + quote(query_url % query_data)
+    r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     if r.status_code is not requests.codes.ok:
         raise DropsException(
@@ -96,7 +107,7 @@ def get_variables(data_id, date_ref):
 
 
 @format_dates()
-def get_levels(data_id, date_ref, variable):
+def get_levels(data_id, date_ref, variable, auth=None):
     """
     get the available levels for the selected coverage and variable on the reference date
     :param data_id: coverage id
@@ -110,8 +121,11 @@ def get_levels(data_id, date_ref, variable):
         date_ref=date_ref,
         variable=variable
     )
-    req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
-    r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    if auth is None:
+        auth = DropsCredentials.instance
+
+    req_url = auth.dds_url() + quote(query_url % query_data)
+    r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     if r.status_code != requests.codes.ok:
         raise DropsException(
@@ -125,7 +139,7 @@ def get_levels(data_id, date_ref, variable):
 
 
 @format_dates()
-def get_timeline(data_id, date_ref, variable, level, date_as_string=False):
+def get_timeline(data_id, date_ref, variable, level, date_as_string=False, auth=None):
     """
     gets the timeline of the required coverage, variable, and level on the reference date
     :param data_id: coverage id
@@ -143,8 +157,12 @@ def get_timeline(data_id, date_ref, variable, level, date_as_string=False):
         level=level
     )
 
-    req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
-    r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    if auth is None:
+        auth = DropsCredentials.instance
+
+
+    req_url = auth.dds_url() + quote(query_url % query_data)
+    r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
     
     if r.status_code is not requests.codes.ok:
         raise DropsException(
@@ -172,6 +190,9 @@ def get_data_request(data_id, date_ref, variable, level, date_selected='all', st
     :param date_selected: selected date
     :return: request object and request url
     """
+    if auth is None:
+        auth = DropsCredentials.instance
+
     query_url = '/drops_coverages/coverage/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/%(date_selected)s/'
     query_data = dict(
         data_id=data_id,
@@ -180,14 +201,14 @@ def get_data_request(data_id, date_ref, variable, level, date_selected='all', st
         level=level,
         date_selected=date_selected
     )
-    req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
+    req_url = auth.dds_url() + quote(query_url % query_data)
     print(req_url)
-    response = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT, stream=stream)
+    response = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT, stream=stream)
 
     return response, req_url
 
 @format_dates()
-def get_data(data_id, date_ref, variable, level, date_selected='all'):
+def get_data(data_id, date_ref, variable, level, date_selected='all', auth=None):
     """
     get the data for the selected coverage, variable, level on the selected date and reference date
     :param data_id: coverage id
@@ -197,8 +218,7 @@ def get_data(data_id, date_ref, variable, level, date_selected='all'):
     :param date_selected: selected date
     :return: a xarray dataset
     """
-
-    response, req_url = get_data_request(data_id, date_ref, variable, level, date_selected)
+    response, req_url = get_data_request(data_id, date_ref, variable, level, date_selected, auth)
     if response.status_code != requests.codes.ok:
         raise DropsException(
             "Error while fetching data for %s - %s, variable: %s, level: %s, selected date: %s" %
@@ -217,7 +237,22 @@ def get_data(data_id, date_ref, variable, level, date_selected='all'):
 
 
 @format_dates()
-def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield, as_pandas=True):
+def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield, as_pandas=True, auth=None):
+    """
+    get the aggregation for the selected coverage, variable, level on the selected date and reference date
+    :param data_id: coverage id
+    :param date_ref: reference date
+    :param variable: selected variable
+    :param level: selected level
+    :param shpfile: shapefile
+    :param shpidfield: shapefile id field
+    :param as_pandas: return a pandas dataframe
+    :param auth: authentication object
+    :return: a xarray dataset
+    """
+    if auth is None:
+        auth = DropsCredentials.instance
+
     query_url = '/drops_coverages/aggregation/%(data_id)s/%(date_ref)s/%(variable)s/%(level)s/'
    
     query_data = dict(
@@ -226,7 +261,7 @@ def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield, as_
         variable=variable,
         level=level
     )
-    req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
+    req_url = auth.dds_url() + quote(query_url % query_data)
 
     r = requests.get(
         req_url, 
@@ -234,7 +269,7 @@ def get_aggregation(data_id, date_ref, variable, level, shpfile, shpidfield, as_
             shpfile=shpfile,
             shpidfield=shpidfield
         ), 
-        auth=DropsCredentials.auth_info(), 
+        auth=auth.auth_info(), 
         timeout=REQUESTS_TIMEOUT
     )
     if r.status_code != requests.codes.ok:

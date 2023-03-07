@@ -9,7 +9,23 @@ from decorator import decorate
 date_format = '%Y%m%d%H%M'
 REQUESTS_TIMEOUT = 60
 
-class DropsCredentials:   
+
+
+class DropsCredentials:
+    """
+    Helper class to store the credentials for the drops webservice.
+    Can be used as a context manager or singleton.
+    example:
+
+    # singleton usage
+    DropsCredentials.set(url, user, password) # set the credentials in the instance
+    sensors.get_sensor_classes() # no need to pass the auth info
+
+    # context manager usage
+    with DropsCredentials(url, user, password) as auth: # use the instance as a context manager
+        sensors.get_sensor_classes(auth=auth)           # do something
+                
+    """
     instance = None
     
     def __init__(self, dds_url, auth_info):
@@ -31,24 +47,27 @@ class DropsCredentials:
             except Exception as e:
                 raise(e)
     
-    @staticmethod
-    def dds_url():
-        #DropsCredentials.load()
-        if DropsCredentials.instance is None:
-            raise DropsLoginException()
-
-        return DropsCredentials.instance.__dds_url
     
-    @staticmethod
-    def auth_info():
-        if DropsCredentials.instance is None:
-            raise DropsLoginException()
-                
-        return DropsCredentials.instance.__auth_info
+    def dds_url(self):
+        return self.__dds_url
+    
+    
+    def auth_info(self):
+        return self.__auth_info
     
     @staticmethod
     def set(dds_url, user, password):
         DropsCredentials.instance = DropsCredentials(dds_url, (user, password))
+
+    def __init__(self, dds_url, user, password):
+        self.__dds_url = dds_url
+        self.__auth_info = user, password
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, type, value, traceback):
+        return True
 
 
 class DropsLoginException(Exception):

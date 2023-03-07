@@ -110,13 +110,16 @@ class SensorList():
 
         return self.__df.copy()
 
-def get_sensor_classes():
+def get_sensor_classes(auth=None):
     """
     gets a list of supported sensor classes
     :return: list of supported sensor classes
     """
-    req_url = DropsCredentials.dds_url() + '/drops_sensors/classes'
-    r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    if auth is None:
+        auth = DropsCredentials.instance
+
+    req_url = auth.dds_url() + '/drops_sensors/classes'
+    r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     if r.status_code is not requests.codes.ok:
         raise DropsException(
@@ -128,7 +131,7 @@ def get_sensor_classes():
     return data
 
 
-def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None):
+def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None, auth=None):
     """
     gets the list of available sensors for the selected class and group
     :param sensor_class: selected sensor class
@@ -136,13 +139,16 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None):
     :param geo_win: optional geographical window for the selected sensors (lon_min, lat_min, lon_max, lat_max)
     :return: list of sensors objects
     """
+    if auth is None:
+        auth = DropsCredentials.instance
+
     query_url = '/drops_sensors/anag/%(sensor_class)s/%(group)s'
     query_data = dict(
         sensor_class=sensor_class,
         group=group
     )
-    req_url = DropsCredentials.dds_url() + quote(query_url % query_data)
-    r = requests.get(req_url, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    req_url = auth.dds_url() + quote(query_url % query_data)
+    r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     if r.status_code is not requests.codes.ok:
         raise DropsException(
@@ -156,7 +162,7 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None):
 
 
 @format_dates()
-def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, date_as_string=False, as_pandas=False):
+def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, date_as_string=False, as_pandas=False, auth):
     """
     get data from selected sensors on the selected date range
     :param sensor_class: sensor class string
@@ -168,6 +174,9 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
     :param as_pandas: return data converted as pandas dataframe (default)
     :return:
     """
+    if auth is None:
+        auth = DropsCredentials.instance
+
     query_url = '/drops_sensors/serieaggr' if aggr_time else '/drops_sensors/serie'
     
     if type(sensors) is SensorList:
@@ -197,8 +206,8 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
 
         post_data['step'] = aggr_seconds
 
-    req_url = DropsCredentials.dds_url() + quote(query_url)
-    r = requests.post(req_url, json=post_data, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT)
+    req_url = auth.dds_url() + quote(query_url)
+    r = requests.post(req_url, json=post_data, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     data = None
     if r.status_code is not requests.codes.ok:
@@ -226,7 +235,7 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
 def get_sensor_map_request(sensor_class, dates_selected, group,
                    cum_hours, geo_win,
                    interpolator,
-                   img_dim, radius, stream=False):
+                   img_dim, radius, stream=False, auth=None):
     """
     get a map for the selected sensor on the selected geowindow
     :param sensor_class: sensor class string
@@ -239,6 +248,9 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
     :param interpolator: one of 'LinearRegression', 'GRISO'
     :return: request response and url
     """
+    if auth is None:
+        auth = DropsCredentials.instance
+
     query_url = '/drops_sensors/map/'
     post_data = {
         "mapOptions": {
@@ -252,9 +264,9 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
         "cumh": cum_hours
     }
 
-    req_url = DropsCredentials.dds_url() + quote(query_url)
+    req_url = auth.dds_url() + quote(query_url)
 
-    response = requests.post(req_url, json=post_data, auth=DropsCredentials.auth_info(), timeout=REQUESTS_TIMEOUT, stream=stream)
+    response = requests.post(req_url, json=post_data, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT, stream=stream)
 
     return response, req_url
 
@@ -262,7 +274,8 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
 def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
                    cum_hours=3, geo_win=(6.0, 36.0, 18.6, 47.5),
                    interpolator=None,
-                   img_dim=(630, 575), radius=0.5):
+                   img_dim=(630, 575), radius=0.5,
+                   auth=None):
     """
     get a map for the selected sensor class on the selected geowindow
     :param sensor_class: sensor class string
@@ -287,7 +300,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
 
     response, req_url = get_sensor_map_request(sensor_class, dates_selected, group,
                    cum_hours, geo_win, interpolator,
-                   img_dim, radius)
+                   img_dim, radius, auth=auth)
 
     if response.status_code is not requests.codes.ok:
         raise DropsException(
