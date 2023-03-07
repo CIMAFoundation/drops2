@@ -186,7 +186,7 @@ def get_timeline(data_id, date_ref, variable, level, date_as_string=False, auth=
     return dates
 
 
-def get_data_request(data_id, date_ref, variable, level, date_selected='all', stream=False):
+def get_data_request(data_id, date_ref, variable, level, date_selected='all', stream=False, auth=None):
     """
     get the data for the selected coverage, variable, level on the selected date and reference date
     :param data_id: coverage id
