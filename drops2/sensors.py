@@ -32,7 +32,7 @@ def __raw_data_to_pandas(data):
         values = d['values']
         timeline = d['timeline']
         index = pd.to_datetime(timeline, utc=True)
-        column = pd.Series(values, index=index)
+        column = pd.Series(values, index=index, dtype=np.float64)
         
         column = column[~column.index.duplicated(keep='first')]
         series[sensor_id] = column
