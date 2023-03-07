@@ -4,11 +4,17 @@ from .sensors import Sensor, SensorList
 
 
 class Station():
+    """
+    A station
+    """
     name: List[str] = None 
     sensors: dict = None
 
 
 class StationsList():
+    """
+    A list of stations
+    """
     stations: List[Station] = None
 
     @staticmethod

@@ -68,6 +68,9 @@ class Sensor():
 
 
 class SensorList():
+    """
+    A list of sensors    
+    """
     list: List[Sensor] = None
     __df: gpd.GeoDataFrame = None
 
@@ -79,6 +82,11 @@ class SensorList():
                 self.list.append(sensor)
 
     def __get_by_id__(self, s_id: str) -> Sensor:
+        """
+        Returns the sensors with the given id
+        :param s_id: sensor id
+        :return: sensor
+        """
         sensors_with_id = filter(lambda s: s.id==s_id, self.list)
         try:
             return next(sensors_with_id)
@@ -86,6 +94,11 @@ class SensorList():
             raise KeyError(s_id + ' not in sensor list')
 
     def get_by_station(self, station: int) -> Sensor:
+        """
+        Returns the sensors with the given station id
+        :param station: station id
+        :return: sensor
+        """
         sensors_with_id = filter(lambda s: s.station==station, self.list)
         try:
             return next(sensors_with_id)
@@ -103,6 +116,11 @@ class SensorList():
         return self.list.__repr__()
 
     def to_geopandas(self) -> gpd.GeoDataFrame:
+        """
+        Converts the list of sensors to a geopandas dataframe
+        Stores the dataframe in a private variable to avoid multiple conversions
+        :return: geopandas dataframe
+        """
         if self.__df is None:
             index = [s.id for s in self.list]
             data = [(s.station, s.name, s.mu) for s in self.list]
