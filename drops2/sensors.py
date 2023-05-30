@@ -259,7 +259,7 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
                    cum_hours, geo_win,
                    interpolator,
                    img_dim, radius, 
-                   mode,
+                   mode=None,
                    stream=False, auth=None):
     """
     get a map for the selected sensor on the selected geowindow
@@ -271,7 +271,7 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
     :param img_dim: dimension of the output image (nrows, ncols)
     :param radius: radius for the inrepolation function
     :param interpolator: one of 'LinearRegression', 'GRISO'
-    :param mode: 'AVERAGE', 'MAX', 'MIN'
+    :param mode: can be 'AVERAGE', 'MIN', 'MAX'. Works for Temperature and Relative Humidity (optional)
     :param stream: stream the response (default False)
     :param auth: authentication object (optional)
     :return: request response and url
@@ -287,11 +287,12 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
             "sensorClass": sensor_class,
             "raggr": group,
             "interpolator": interpolator,
-            "operation": mode
         },
         "timeline": dates_selected,
         "cumh": cum_hours
     }
+    if mode is not None:        
+        post_data['mapOptions']['operation'] = mode
 
     req_url = auth.dds_url() + quote(query_url)
 
@@ -304,7 +305,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
                    cum_hours=3, geo_win=(6.0, 36.0, 18.6, 47.5),
                    interpolator=None,
                    img_dim=(630, 575), radius=0.5,
-                   mode='AVERAGE',
+                   mode=None,
                    auth=None):
     """
     get a map for the selected sensor class on the selected geowindow
@@ -321,7 +322,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
 
     :param interpolator: one of 'LinearRegression', 'GRISO'. It defaults to 
                             'GRISO' for pluviometers, otherwise to 'LinearRegression'
-    :param mode: 'AVERAGE', 'MIN', 'MAX' (default 'AVERAGE')
+    :param mode: can be 'AVERAGE', 'MIN', 'MAX'. Works for Temperature and Relative Humidity (optional)
     :param auth: authentication object (optional)                            
     :return: xarray dataset
     """
