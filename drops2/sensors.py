@@ -258,7 +258,9 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
 def get_sensor_map_request(sensor_class, dates_selected, group,
                    cum_hours, geo_win,
                    interpolator,
-                   img_dim, radius, stream=False, auth=None):
+                   img_dim, radius, 
+                   mode,
+                   stream=False, auth=None):
     """
     get a map for the selected sensor on the selected geowindow
     :param sensor_class: sensor class string
@@ -269,6 +271,8 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
     :param img_dim: dimension of the output image (nrows, ncols)
     :param radius: radius for the inrepolation function
     :param interpolator: one of 'LinearRegression', 'GRISO'
+    :param mode: 'AVERAGE', 'MAX', 'MIN'
+    :param stream: stream the response (default False)
     :param auth: authentication object (optional)
     :return: request response and url
     """
@@ -282,7 +286,8 @@ def get_sensor_map_request(sensor_class, dates_selected, group,
             "radius": str(radius),
             "sensorClass": sensor_class,
             "raggr": group,
-            "interpolator": interpolator
+            "interpolator": interpolator,
+            "operation": mode
         },
         "timeline": dates_selected,
         "cumh": cum_hours
@@ -299,6 +304,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
                    cum_hours=3, geo_win=(6.0, 36.0, 18.6, 47.5),
                    interpolator=None,
                    img_dim=(630, 575), radius=0.5,
+                   mode='AVERAGE',
                    auth=None):
     """
     get a map for the selected sensor class on the selected geowindow
@@ -315,6 +321,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
 
     :param interpolator: one of 'LinearRegression', 'GRISO'. It defaults to 
                             'GRISO' for pluviometers, otherwise to 'LinearRegression'
+    :param mode: 'AVERAGE', 'MIN', 'MAX' (default 'AVERAGE')
     :param auth: authentication object (optional)                            
     :return: xarray dataset
     """
@@ -325,7 +332,7 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
 
     response, req_url = get_sensor_map_request(sensor_class, dates_selected, group,
                    cum_hours, geo_win, interpolator,
-                   img_dim, radius, auth=auth)
+                   img_dim, radius,  mode, auth=auth)
 
     if response.status_code is not requests.codes.ok:
         raise DropsException(
