@@ -8,8 +8,7 @@ import pytz
 from decorator import decorate
 
 date_format = '%Y%m%d%H%M'
-REQUESTS_TIMEOUT = 60
-
+REQUESTS_TIMEOUT = (10, 300)  # connect timeout, read timeout
 
 
 class DropsCredentials:

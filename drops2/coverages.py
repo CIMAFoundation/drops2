@@ -9,8 +9,11 @@ import requests
 import xarray as xr
 from requests.utils import quote
 
-from .utils import (REQUESTS_TIMEOUT, DropsCredentials, DropsException,
-                    date_format, datetimes_from_strings, format_dates)
+from .utils import (REQUESTS_TIMEOUT, 
+                    DropsCredentials, DropsException,
+                    date_format, 
+                    datetimes_from_strings, 
+                    format_dates)
 
 
 def get_supported_data(auth=None):
