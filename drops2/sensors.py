@@ -203,7 +203,7 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None, auth=No
 
 
 @format_dates()
-def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, date_as_string=False, as_pandas=False, auth=None):
+def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, aggr_func=None, date_as_string=False, as_pandas=False, auth=None):
     """
     get data from selected sensors on the selected date range
     :param sensor_class: sensor class string
@@ -218,8 +218,8 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
     """
     if auth is None:
         auth = DropsCredentials.default()
-
-    query_url = '/drops_sensors/serieaggr' if aggr_time else '/drops_sensors/serie'
+    
+    query_url = '/drops_sensors/serie' if not aggr_time else ('/drops_sensors/serieaggr-smart' if aggr_func else '/drops_sensors/serieaggr')
     
     if type(sensors) is SensorList:
         sensors = sensors.list
@@ -245,8 +245,10 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, d
             aggr_seconds = aggr_time
         else:
             raise DropsException(f'aggr_time object is neither numeric or timedelta object [{aggr_time}]')
-
         post_data['step'] = aggr_seconds
+
+    if aggr_func:
+        post_data['aggrFunction'] = aggr_func
 
     req_url = auth.dds_url() + quote(query_url)
     r = requests.post(req_url, json=post_data, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
