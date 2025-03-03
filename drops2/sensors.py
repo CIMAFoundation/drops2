@@ -151,6 +151,25 @@ def get_sensor_classes(auth=None):
     data = r.json()
     return data
 
+def get_aggregation_funtions(auth=None):
+    """
+    returns a list of supported aggregation funcions
+    :param auth: authentication object (optional)
+    :return: list of supported aggregation funcions
+    """
+    if auth is None:
+        auth = DropsCredentials.default()
+
+    req_url = auth.dds_url() + '/drops_sensors/aggregations'
+    r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
+
+    if r.status_code is not requests.codes.ok:
+        raise DropsException(
+            "Error while fetching sensor classes",
+            response=r
+        )
+
+    return r.json()
 
 def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None, auth=None):
     """
