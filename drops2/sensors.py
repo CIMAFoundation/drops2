@@ -370,7 +370,6 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
         logging.error('Error loading dataset from %s' % req_url)
         raise exp
 
-
     return cf_data
 
 
