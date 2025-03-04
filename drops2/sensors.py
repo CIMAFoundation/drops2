@@ -27,22 +27,33 @@ def __raw_data_to_pandas(data):
     """
     
     series = {}
+    # check if the dataset has validSamples column
+    has_valid_samples = 'validSamples' in data[0]
+
     for d in data:
         sensor_id = d['sensorId']
         if sensor_id in series:
             continue
         values = d['values']
-        samples = d['validSamples']
+        
         timeline = d['timeline']
         index = pd.to_datetime(timeline, utc=True)
         column = pd.Series(values, index=index, dtype=np.float64)        
         column = column[~column.index.duplicated(keep='first')]        
         series[sensor_id] = column
-        column = pd.Series(samples, index=index, dtype=np.int32)        
-        column = column[~column.index.duplicated(keep='first')]        
-        series[f'{sensor_id}_samples'] = column
-
+    
     df = pd.DataFrame(series)
+
+    if has_valid_samples:
+        for d in data:
+            sensor_id = d['sensorId']
+            timeline = d['timeline']
+            index = pd.to_datetime(timeline, utc=True)
+            samples = d['validSamples']
+            column = pd.Series(samples, index=index, dtype=np.int32)        
+            column = column[~column.index.duplicated(keep='first')]        
+            df[f'{sensor_id}_samples'] = column
+    
     return df
 
 class Sensor():
@@ -154,7 +165,7 @@ def get_sensor_classes(auth=None):
     data = r.json()
     return data
 
-def get_aggregation_funtions(auth=None):
+def get_aggregation_functions(auth=None):
     """
     returns a list of supported aggregation funcions
     :param auth: authentication object (optional)
@@ -168,7 +179,7 @@ def get_aggregation_funtions(auth=None):
 
     if r.status_code is not requests.codes.ok:
         raise DropsException(
-            "Error while fetching sensor classes",
+            "Error while fetching aggregation functions",
             response=r
         )
 
@@ -204,25 +215,58 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None, auth=No
     sensor_list = SensorList(sensor_list_json, geo_win=geo_win)
     return sensor_list
 
+def _get_sensor_data(query_url, post_data, as_pandas, date_as_string, auth):
+    req_url = auth.dds_url() + quote(query_url)
+    r = requests.post(req_url, json=post_data, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
+
+    data = None
+    if r.status_code is not requests.codes.ok:
+        raise DropsException("Error while fetching sensor data", response=r)
+
+    data = r.json()
+
+    if as_pandas:
+        df = __raw_data_to_pandas(data)
+        return df
+    
+    if not date_as_string:
+        for sensor_data in data:
+            dates_str = sensor_data['timeline']
+            dates = datetimes_from_strings(dates_str)
+            sensor_data['timeline'] = dates
+
+    return data
+
 
 @format_dates()
-def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, aggr_func=None, date_as_string=False, as_pandas=False, auth=None):
+def get_sensor_data_aggr(
+    sensor_class, 
+    sensors, 
+    date_from, 
+    date_to, 
+    aggr_time, 
+    aggr_func, 
+    date_as_string=False, 
+    as_pandas=False, 
+    auth=None    
+):
     """
-    get data from selected sensors on the selected date range
+    get data from selected sensors on the selected date range, aggregating on time using the selected `aggr_func` function
     :param sensor_class: sensor class string
     :param sensors: SensorList Object, or list of Sensors or list of sensors id
     :param date_from: date from
     :param date_to: date to
-    :param aggr: aggregation time as number of seconds or datetime.timedelta object or pd.timedelta object
+    :param aggr_time: aggregation time as number of seconds or datetime.timedelta object or pd.timedelta object
+    :param aggr_func: aggregation function for the dataset (returned by `get_aggregation_funtions`)
     :param date_as_string: return dates as string or datetime objects (default)
     :param as_pandas: return data converted as pandas dataframe (default)
     :param auth: authentication object (optional)
-    :return:
+    :return: raw data as json, or pandas dataframe
     """
     if auth is None:
         auth = DropsCredentials.default()
     
-    query_url = '/drops_sensors/serie' if not aggr_time else ('/drops_sensors/serieaggr-smart' if aggr_func else '/drops_sensors/serieaggr')
+    query_url = '/drops_sensors/serieaggr-smart'     
     
     if type(sensors) is SensorList:
         sensors = sensors.list
@@ -253,30 +297,68 @@ def get_sensor_data(sensor_class, sensors, date_from, date_to, aggr_time=None, a
     if aggr_func:
         post_data['aggrFunction'] = aggr_func
 
-    req_url = auth.dds_url() + quote(query_url)
-    r = requests.post(req_url, json=post_data, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
+    return _get_sensor_data(query_url, post_data, as_pandas, date_as_string, auth)
 
-    data = None
-    if r.status_code is not requests.codes.ok:
-        raise DropsException(
-            "Error while fetching sensor data for %s between %s and %s" %
-            (sensor_class, date_from, date_to),
-            response=r
-        )
+@format_dates()
+def get_sensor_data(
+    sensor_class, 
+    sensors, 
+    date_from, 
+    date_to, 
+    aggr_time=None, 
+    date_as_string=False, 
+    as_pandas=False, 
+    auth=None
+):
+    """
+    get data from selected sensors on the selected date range
+    :param sensor_class: sensor class string
+    :param sensors: SensorList Object, or list of Sensors or list of sensors id
+    :param date_from: date from
+    :param date_to: date to
+    :param aggr_time: aggregation time as number of seconds or datetime.timedelta object or pd.timedelta object
+    :param date_as_string: return dates as string or datetime objects (default)
+    :param as_pandas: return data converted as pandas dataframe (default)
+    :param auth: authentication object (optional)
+    :return: raw data as json, or pandas dataframe
+    """
+    if auth is None:
+        auth = DropsCredentials.default()
+    
+    if aggr_time is None:
+        query_url = '/drops_sensors/serie' 
+    else: 
+        query_url = '/drops_sensors/serieaggr'
+    
+    if type(sensors) is SensorList:
+        sensors = sensors.list
 
-    data = r.json()
-
-    if as_pandas:
-        df = __raw_data_to_pandas(data)
-        return df
+    if all([type(s) is Sensor for s in sensors]):
+        id_sensors = [s.id for s in sensors]
+    elif all([type(s) is str for s in sensors]):
+        id_sensors = sensors
     else:
-        if not date_as_string:
-            for sensor_data in data:
-                dates_str = sensor_data['timeline']
-                dates = datetimes_from_strings(dates_str)
-                sensor_data['timeline'] = dates
+        raise DropsException("sensor list not valid")
 
-        return data
+    post_data = {
+        'sensorClass': sensor_class,
+        'from': date_from,
+        'to': date_to,
+        'ids': id_sensors
+    }
+
+    if aggr_time:
+        if type(aggr_time) in (timedelta, Timedelta):
+            aggr_seconds = aggr_time.total_seconds()
+        elif isinstance(aggr_time, Number):
+            aggr_seconds = aggr_time
+        else:
+            raise DropsException(f'aggr_time object is neither numeric or timedelta object [{aggr_time}]')
+        post_data['step'] = aggr_seconds
+
+    
+    return _get_sensor_data(query_url, post_data, as_pandas, date_as_string, auth)
+
 
 
 def get_sensor_map_request(sensor_class, dates_selected, group,
