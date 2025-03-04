@@ -32,12 +32,15 @@ def __raw_data_to_pandas(data):
         if sensor_id in series:
             continue
         values = d['values']
+        samples = d['validSamples']
         timeline = d['timeline']
         index = pd.to_datetime(timeline, utc=True)
-        column = pd.Series(values, index=index, dtype=np.float64)
-        
-        column = column[~column.index.duplicated(keep='first')]
-        series[sensor_id] = column
+        column = pd.Series(values, index=index, dtype=np.float64)        
+        column = column[~column.index.duplicated(keep='first')]        
+        series[f'{sensor_id}_values'] = column
+        column = pd.Series(samples, index=index, dtype=np.int32)        
+        column = column[~column.index.duplicated(keep='first')]        
+        series[f'{sensor_id}_samples'] = column
 
     df = pd.DataFrame(series)
     return df
