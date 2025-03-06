@@ -1,10 +1,13 @@
-from drops2 import sensors
+from drops2 import sensors, coverages
 from drops2.utils import DropsCredentials
+s = sensors.get_sensor_list('TERMOMETRO')
+s.as_serializable()
 
+sensors.get_aggregation_functions('TERMOMETRO', auth=DropsCredentials("https://dds-test.cimafoundation.org/dds/rest", ("admin", "geoDDS2013")))
 
 data = sensors.get_sensor_data_aggr(
     'TERMOMETRO', 
-    ["210331261_2", "50000359_2", "210329479_2", "50000377_2", "50000428_2"], 
+    s.list, 
     '202410010000', 
     '202410050000', 
     aggr_time=3600, 
@@ -15,3 +18,14 @@ data = sensors.get_sensor_data_aggr(
 )
 
 data
+
+
+date_from =  '202503050000'
+data_id = 'RISICOLIGURIA_MOLOCH_AGGR'
+variable = 'RISICOLIGURIA-MOLOCH_GEN-PERC75-VPPF'
+shpfile = 'data/shpRisico/liguria/comuni_liguria_new.shp'
+shpidfield = 'codice_com'
+level = 0
+
+coverages.get_aggregation(data_id, date_from, variable, level, shpfile, shpidfield, as_pandas=True)
+
