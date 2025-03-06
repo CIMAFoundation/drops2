@@ -1,9 +1,11 @@
 import io
 import logging
-from builtins import filter, map, zip  # 2 and 3 compatibility
+from builtins import filter # 2 and 3 compatibility
+from dataclasses import dataclass, field, asdict
 from datetime import timedelta
 from numbers import Number
-from typing import Any, Dict, List, Tuple
+import re
+from typing import Any, List, Tuple
 
 import geopandas as gpd
 import numpy as np
@@ -56,22 +58,14 @@ def __raw_data_to_pandas(data):
     
     return df
 
+@dataclass
 class Sensor():
-    sensor_type: str
-    station: int
     id: str
+    station: int
     name: str
     lat: float
     lng: float
     mu: str
-
-    def __init__(self, sensor_dict):
-        self.id = sensor_dict['id']
-        self.station = sensor_dict['station']
-        self.name = sensor_dict['stationName']
-        self.lat = sensor_dict['lat']
-        self.lng = sensor_dict['lon']
-        self.mu = sensor_dict['sensorMU']
 
     def is_inside(self, geo_win) -> bool:
         inside = (geo_win[1] <= self.lat <= geo_win[3]) and (geo_win[0] <= self.lng <= geo_win[2])
@@ -80,22 +74,34 @@ class Sensor():
     def __repr__(self) -> str:
         return self.__dict__.__repr__()
 
-
+@dataclass
 class SensorList():
     """
     A list of sensors    
     """
-    list: List[Sensor] = None
-    __df: gpd.GeoDataFrame = None
+    list: List[Sensor]
+    __df: gpd.GeoDataFrame = field(init=False, default=None, repr=False)
 
-    def __init__(self, sensor_list, geo_win=None):
-        self.list = []
+    @staticmethod 
+    def from_json(sensor_list: dict, geo_win: Tuple[float, float, float, float]|None) -> 'SensorList':       
+        sensors = []
         for sensor_dict in sensor_list:
-            sensor = Sensor(sensor_dict)
-            if geo_win is None or sensor.is_inside(geo_win):
-                self.list.append(sensor)
+            sensor_id = sensor_dict['id']
+            station = sensor_dict['station']
+            name = sensor_dict['stationName']
+            lat = sensor_dict['lat']
+            lng = sensor_dict['lon']
+            mu = sensor_dict['sensorMU']
 
-    def __get_by_id__(self, s_id: str) -> Sensor:
+            sensor = Sensor(
+                sensor_id, station, name, lat, lng, mu
+            )
+            if geo_win is None or sensor.is_inside(geo_win):
+                sensors.append(sensor)
+
+        return SensorList(sensors)
+
+    def __get_by_id(self, s_id: str) -> Sensor:
         """
         Returns the sensors with the given id
         :param s_id: sensor id
@@ -122,12 +128,18 @@ class SensorList():
 
     def __getitem__(self, item: Any) -> Sensor:
         if isinstance(item, str):
-            return self.__get_by_id__(item)
+            return self.__get_by_id(item)
         else:
             return self.list[item]
 
-    def __repr__(self):
-        return self.list.__repr__()
+   
+    def as_serializable(self) -> List[dict]:
+        """
+        Returns a serializable list of the sensors
+        :return: list of sensors as dictionaries    
+        """
+        return [asdict(s) for s in self.list]
+
 
     def to_geopandas(self) -> gpd.GeoDataFrame:
         """
@@ -143,6 +155,7 @@ class SensorList():
             self.__df.index.name = 'id'
 
         return self.__df.copy()
+
 
 def get_sensor_classes(auth=None):
     """
@@ -165,7 +178,7 @@ def get_sensor_classes(auth=None):
     data = r.json()
     return data
 
-def get_aggregation_functions(auth=None):
+def get_aggregation_functions(sensor_class=None, auth=None):
     """
     returns a list of supported aggregation funcions
     :param auth: authentication object (optional)
@@ -175,6 +188,9 @@ def get_aggregation_functions(auth=None):
         auth = DropsCredentials.default()
 
     req_url = auth.dds_url() + '/drops_sensors/aggregations'
+    if sensor_class is not None:
+        req_url += '/' + sensor_class
+        
     r = requests.get(req_url, auth=auth.auth_info(), timeout=REQUESTS_TIMEOUT)
 
     if r.status_code is not requests.codes.ok:
@@ -212,7 +228,7 @@ def get_sensor_list(sensor_class, group='Dewetra%Default', geo_win=None, auth=No
         )
 
     sensor_list_json = r.json()
-    sensor_list = SensorList(sensor_list_json, geo_win=geo_win)
+    sensor_list = SensorList.from_json(sensor_list=sensor_list_json, geo_win=geo_win)
     return sensor_list
 
 def _get_sensor_data(query_url, post_data, as_pandas, date_as_string, auth):
@@ -459,4 +475,4 @@ def get_sensor_map(sensor_class, dates_selected, group='Dewetra%Default',
 
 
 if __name__ == '__main__':
-    pass
+    ...
