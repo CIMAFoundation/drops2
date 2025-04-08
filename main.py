@@ -2,9 +2,9 @@ import json
 from drops2 import sensors, coverages
 from drops2.utils import DropsCredentials
 
-s = sensors.get_sensor_list('TERMOMETRO', auth=DropsCredentials("https://dds-test.cimafoundation.org/dds/rest", ("admin", "geoDDS2013")))
+s = sensors.get_sensor_list('TERMOMETRO', group='ComuneLive%PN5P', auth=DropsCredentials("https://dds-test.cimafoundation.org/dds/rest", ("admin", "geoDDS2013")))
 json_list = s.as_serializable()
-print(json_list[0]['station'])
+print(json_list[0])
 
 # sensors.get_aggregation_functions('TERMOMETRO', auth=DropsCredentials("https://dds-test.cimafoundation.org/dds/rest", ("admin", "geoDDS2013")))
 
