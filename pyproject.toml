@@ -1,0 +1,23 @@
+[project]
+name = "drops2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "decorator>=5.2.1",
+    "fiona>=1.10.1",
+    "geopandas>=1.1.1",
+    "h5netcdf>=1.6.3",
+    "netcdf4>=1.7.2",
+    "numpy>=2.3.1",
+    "pandas>=2.3.1",
+    "pyproj>=3.7.1",
+    "python-dateutil>=2.9.0.post0",
+    "pytz>=2025.2",
+    "pyzmq>=27.0.0",
+    "requests>=2.32.4",
+    "scipy>=1.16.0",
+    "shapely>=2.1.1",
+    "xarray>=2025.7.1",
+]
