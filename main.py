@@ -1,31 +1,34 @@
-from drops2 import sensors, coverages
 from drops2.utils import DropsCredentials
-s = sensors.get_sensor_list('TERMOMETRO')
-s.as_serializable()
+import pandas as pd
+from drops2.client import DropsCoverage
 
-sensors.get_aggregation_functions('TERMOMETRO', auth=DropsCredentials("https://dds-test.cimafoundation.org/dds/rest", ("admin", "geoDDS2013")))
+date_from =  '202507280000'
+data_id = 'RISICO2023'
+variable = 'V'
+level = '-'
 
-data = sensors.get_sensor_data_aggr(
-    'TERMOMETRO', 
-    s.list, 
-    '202410010000', 
-    '202410050000', 
-    aggr_time=3600, 
-    aggr_func='AVERAGE', 
-    auth=DropsCredentials("https://dds-test.cimafoundation.org/dds/rest", ("admin", "geoDDS2013")),
-    date_as_string=True, 
-    as_pandas=True
+date_from = pd.Timestamp(date_from)
+
+auth_info = DropsCredentials(
+    "https://dds-test.cimafoundation.org/dds/rest", 
+    ("admin", "geoDDS2013")
 )
+coverage = DropsCoverage(auth=auth_info)
 
-data
+coverage_def = coverage\
+    .with_data_id(data_id)\
+    .with_date(date_from)\
+    .with_variable(variable)\
+    .with_level(level)\
 
+print(coverage_def.describe())
 
-date_from =  '202503050000'
-data_id = 'RISICOLIGURIA_MOLOCH_AGGR'
-variable = 'RISICOLIGURIA-MOLOCH_GEN-PERC75-VPPF'
-shpfile = 'data/shpRisico/liguria/comuni_liguria_new.shp'
-shpidfield = 'codice_com'
-level = 0
+timeline = coverage_def\
+    .get_timeline()
 
-coverages.get_aggregation(data_id, date_from, variable, level, shpfile, shpidfield, as_pandas=True)
+print(timeline)
 
+data = coverage_def\
+    .get_data()
+
+print(timeline[0])

@@ -1,11 +1,18 @@
 import inspect
 import json
-from typing import Tuple
-from builtins import filter, map, zip  # 2 and 3 compatibility
+from builtins import zip  # 2 and 3 compatibility
 from datetime import date, datetime
+from typing import Tuple, Optional
+
+import numpy as np
+import pandas as pd
 
 import pytz
 from decorator import decorate
+
+type DateLike = datetime | pd.Timestamp | np.datetime64 
+type DateLikeList = list[datetime | pd.Timestamp | np.datetime64]
+
 
 date_format = '%Y%m%d%H%M'
 REQUESTS_TIMEOUT = (10, 300)  # connect timeout, read timeout
@@ -130,6 +137,26 @@ class DropsException(Exception):
     def __str__(self):
         return repr(self.message)
 
+def __is_date(arg_value: DateLike) -> bool:
+    """
+    Check if the argument is a date-like object
+    :param arg_value: the argument to check
+    :return: True if it is a date-like object, False otherwise
+    """
+    return isinstance(arg_value, (datetime, date, pd.Timestamp, np.datetime64))
+
+def __convert_single_date(arg_value: DateLike, date_format_str=date_format) -> Optional[str]:
+    if isinstance(arg_value, (datetime, date)):
+        return arg_value.strftime(date_format_str)
+    elif isinstance(arg_value, pd.Timestamp):
+        # convert pandas Timestamp to string
+        return arg_value.strftime(date_format_str)
+    elif isinstance(arg_value, np.datetime64):
+        # convert numpy datetime64 to string
+        return pd.Timestamp(arg_value).strftime(date_format_str)
+    
+    return None
+    
 
 def format_dates(date_format_str=date_format, parameters=None):
     """
@@ -148,19 +175,22 @@ def format_dates(date_format_str=date_format, parameters=None):
             else:
                 # older versions of python < 3.10
                 args_name = inspect.getargspec(func)[0]
+
             # skip the first argument, it is the function to decorate
             args_dict = dict(zip(args_name, args[1:]))
             args_dict.update(kwargs)
             for arg_name, arg_value in args_dict.items():
                 if parameters is None or any([arg_name == p for p in parameters]):
-                    if type(arg_value) in (datetime, date):
-                        arg_str = arg_value.strftime(date_format_str)
-                        args_dict[arg_name] = arg_str
+                    if __is_date(arg_value):
+                        # convert single date to string
+                        arg_str = __convert_single_date(arg_value, date_format_str)
+                        if arg_str is not None:
+                            args_dict[arg_name] = arg_str
 
-                    elif type(arg_value) in (list, tuple):
+                    elif isinstance(arg_value, (list, tuple)):
                         # check for array of dates
-                        if all([type(el) in (datetime, date) for el in arg_value]):
-                            arg_str_arr = [el.strftime(date_format_str) for el in arg_value]
+                        if all([__is_date(el) for el in arg_value]):
+                            arg_str_arr = [__convert_single_date(el, date_format_str) for el in arg_value]
                             args_dict[arg_name] = arg_str_arr
 
             return func(**args_dict)
