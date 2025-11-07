@@ -3,7 +3,7 @@ name = "drops2"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "decorator>=5.2.1",
     "fiona>=1.10.1",
